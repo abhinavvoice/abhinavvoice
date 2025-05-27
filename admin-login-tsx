@@ -1,0 +1,91 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Lock, User, Eye, EyeOff } from "lucide-react";
+import {
+  Card, CardContent, CardHeader, CardTitle
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+
+export function AdminLogin() {
+  const [credentials, setCredentials] = useState({ username: "", password: "" });
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(credentials)
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        localStorage.setItem("isAdminLoggedIn", "true");
+        toast.success("सफलतापूर्वक लॉगिन हो गया!");
+        navigate("/admin/dashboard");
+      } else {
+        toast.error("गलत यूज़रनेम या पासवर्ड!");
+      }
+    } catch (error) {
+      toast.error("लॉगिन करने में समस्या हुई!");
+    }
+
+    setIsLoading(false);
+  };
+
+  return (
+    <div className="flex items-center justify-center h-screen">
+      <Card className="w-[400px]">
+        <CardHeader>
+          <CardTitle>एडमिन लॉगिन</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <Label>यूज़रनेम</Label>
+              <Input
+                type="text"
+                placeholder="उदाहरण: admin"
+                value={credentials.username}
+                onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <Label>पासवर्ड</Label>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="पासवर्ड"
+                  value={credentials.password}
+                  onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
+                  required
+                />
+                <div
+                  className="absolute right-3 top-2 cursor-pointer"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff /> : <Eye />}
+                </div>
+              </div>
+            </div>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "लॉगिन हो रहा है..." : "लॉगिन करें"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
